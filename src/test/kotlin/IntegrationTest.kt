@@ -1,7 +1,11 @@
 package es.unizar.webeng.hello
 
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
@@ -10,9 +14,13 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRe
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
+@Import(IntegrationTest.TestConfig::class)
 class IntegrationTest {
     @LocalServerPort
     private var port: Int = 0
@@ -36,7 +44,7 @@ class IntegrationTest {
         val response = restTemplate.getForEntity("http://localhost:$port?name=Developer", String::class.java)
         
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(response.body).contains("Hello, Developer!")
+        assertThat(response.body).contains("Good morning, Developer!")
     }
 
     @Test
@@ -45,7 +53,7 @@ class IntegrationTest {
         
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(response.headers.contentType).isEqualTo(MediaType.APPLICATION_JSON)
-        assertThat(response.body).contains("Hello, Test!")
+        assertThat(response.body).contains("Good morning, Test!")
         assertThat(response.body).contains("timestamp")
     }
 
@@ -77,5 +85,15 @@ class IntegrationTest {
         assertThat(response.body).contains("API Endpoint")
         assertThat(response.body).contains("Health Check")
         assertThat(response.body).contains("Learning Notes:")
+    }
+
+    @TestConfiguration
+    class TestConfig {
+        @Primary
+        @Bean
+        fun testClock(): Clock = Clock.fixed(
+            Instant.parse("2026-09-25T10:00:00Z"),
+            ZoneOffset.UTC
+        )
     }
 }
